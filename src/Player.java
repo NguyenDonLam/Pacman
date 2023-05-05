@@ -2,10 +2,9 @@ import bagel.*;
 import bagel.util.Point;
 import java.lang.Math;
 
-public class Player extends Entity{
+public class Player extends Entity implements Movable{
     private final int MOVE_AMOUNT = 3;
     private final int CHANGE_MARK = 15;
-    private double originalX, originalY;
     private Image closedMouth;
     private Image openMouth;
     private DrawOptions direction = new DrawOptions();
@@ -15,8 +14,8 @@ public class Player extends Entity{
         this.closedMouth = new Image(closedMouth);
         this.openMouth = new Image(openMouth);
         this.sprite = this.closedMouth;
-        this.originalX = x;
-        this.originalY = y;
+        this.x = this.originX;
+        this.y = this.originY;
         this.boundingBox = sprite.getBoundingBox();
     }
 
@@ -26,27 +25,16 @@ public class Player extends Entity{
      * Takes in a double in radian specifying the direction we are moving in
      */
     public void makeMove(double direction) {
-        //moving right
-        if (direction == 0) {
-            this.x += MOVE_AMOUNT;
-            //moving down
-        } else if (direction == 0.5 * Math.PI) {
-            this.y += MOVE_AMOUNT;
-            //moving left
-        } else if (direction == Math.PI) {
-            this.x -= MOVE_AMOUNT;
-            //moving up
-        } else if (direction == 1.5 * Math.PI) {
-            this.y -= MOVE_AMOUNT;
-        }
+        Movable.super.makeMove(this, this.x, this.y, MOVE_AMOUNT, direction);
         this.direction.setRotation(direction);
+        System.out.println("x y is" + this.x + this.y);
     }
     @Override
     public void spawn() {
         direction.setRotation(0);
-        this.x = originalX;
-        this.y = originalY;
-        sprite.drawFromTopLeft(this.originalX, this.originalY);
+        this.x = this.originX;
+        this.y = this.originY;
+        sprite.drawFromTopLeft(this.originX, this.originY);
     }
 
     /**
@@ -66,27 +54,8 @@ public class Player extends Entity{
             sprite.drawFromTopLeft(this.x, this.y, direction);
         }
     }
-
-    /**
-     * Check if the current is blocked by the provided wall in the provided direction
-     *
-     * Takes in a wall and the direction moving in to check
-     * Return True if blocked otherwise False
-     */
-    public boolean blockedBy(Wall wall, double direction) {
-        //moving right
-        if (direction == 0) {
-            boundingBox.moveTo(new Point(this.x + 3, this.y));
-        //moving down
-        } else if (direction == 0.5 * Math.PI) {
-            boundingBox.moveTo(new Point(this.x, this.y + 3));
-        //moving left
-        } else if (direction == Math.PI) {
-            boundingBox.moveTo(new Point(this.x - 3, this.y));
-        //moving up
-        } else if (direction == 1.5 * Math.PI) {
-            boundingBox.moveTo(new Point(this.x, this.y - 3));
-        }
-        return boundingBox.intersects(wall.getBoundingBox());
+    @Override
+    public int getSpeed() {
+        return this.MOVE_AMOUNT;
     }
 }
