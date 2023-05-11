@@ -10,6 +10,8 @@ public class Entity {
         boundingBox = sprite.getBoundingBox();
         this.originX = x;
         this.originY = y;
+        this.x = x;
+        this.y = y;
         boundingBox.moveTo(new Point(this.originX, this.originY));
     }
     public Entity(double x, double y) {
@@ -21,7 +23,12 @@ public class Entity {
      * Draw the sprite at their origin
      */
     public void spawn() {
+        this.x = this.originX;
+        this.y = this.originY;
         sprite.drawFromTopLeft(this.originX, this.originY);
+    }
+    public void render() {
+        sprite.drawFromTopLeft(this.x, this.y);
     }
 
     /**
@@ -50,6 +57,8 @@ public class Entity {
      * Returns True or False depending on if it will overlap
      */
     public boolean overlaps(Entity entity) {
+        boundingBox.moveTo(new Point(this.x, this.y));
+        entity.setBoundingBox(entity.getX(), entity.getY());
         return boundingBox.intersects(entity.getBoundingBox());
     }
 

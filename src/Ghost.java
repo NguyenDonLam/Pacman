@@ -1,14 +1,35 @@
+import bagel.*;
+
+import java.util.ArrayList;
+
 public class Ghost extends Entity implements Edible, Movable {
     protected final int POINTS = 30;
-    protected boolean eatened;
-    protected boolean frienzied;
+    protected final Image frenzy = new Image("res/ghostFrenzy.png");
+    protected boolean eatened = false;
+    protected int frendziedTime = 0;
+    protected double direction = 0;
+    protected double speed = 1;
+
     public Ghost(String imagePath, double x, double y) {
         super(imagePath, x, y);
-        this.frienzied = false;
-        this.eatened = false;
     }
-    public int getSpeed(){
-        return 0;
+    public void spawn() {
+        this.x = this.originX;
+        this.y = this.originY;
+        sprite.drawFromTopLeft(this.originX, this.originY);
+        eatened = false;
+    }
+    public void render() {
+        if (frendziedTime % 1000 != 0 && !this.eatened) {
+            frenzy.drawFromTopLeft(this.x, this.y);
+        } else {
+            sprite.drawFromTopLeft(this.x, this.y);
+        }
+    }
+    public double getSpeed(){
+        if (frendziedTime % 1000 != 0)
+            return this.speed - 0.5;
+        return this.speed;
     }
 
     public boolean isEatened() {
@@ -18,6 +39,17 @@ public class Ghost extends Entity implements Edible, Movable {
     public int beingEaten() {
         this.eatened = true;
         return this.POINTS;
+    }
+
+    public double getDirection() {
+        return direction;
+    }
+    public void action(ArrayList<Wall> walls) {
+        if (frendziedTime % 1000 != 0)
+            frendziedTime++;
+    }
+    public void startScared() {
+        frendziedTime = 1;
     }
 
 }

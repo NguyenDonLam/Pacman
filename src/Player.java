@@ -8,7 +8,8 @@ public class Player extends Entity implements Movable{
     private Image closedMouth;
     private Image openMouth;
     private DrawOptions direction = new DrawOptions();
-    private int changeMark = 15;
+    private int frenzyTime = 0;
+
     public Player(String closedMouth, String openMouth, double x, double y) {
         super(x, y);
         this.closedMouth = new Image(closedMouth);
@@ -25,16 +26,13 @@ public class Player extends Entity implements Movable{
      * Takes in a double in radian specifying the direction we are moving in
      */
     public void makeMove(double direction) {
-        Movable.super.makeMove(this, this.x, this.y, MOVE_AMOUNT, direction);
+        Movable.super.makeMove(this, this.x, this.y, this.getSpeed(), direction);
         this.direction.setRotation(direction);
-        System.out.println("x y is" + this.x + this.y);
     }
     @Override
     public void spawn() {
         direction.setRotation(0);
-        this.x = this.originX;
-        this.y = this.originY;
-        sprite.drawFromTopLeft(this.originX, this.originY);
+        super.spawn();
     }
 
     /**
@@ -53,9 +51,17 @@ public class Player extends Entity implements Movable{
         } else {
             sprite.drawFromTopLeft(this.x, this.y, direction);
         }
+        if (frenzyTime % 1000 != 0) {
+            frenzyTime++;
+        }
     }
     @Override
-    public int getSpeed() {
+    public double getSpeed() {
+        if (frenzyTime % 1000 != 0)
+            return this.MOVE_AMOUNT + 1;
         return this.MOVE_AMOUNT;
+    }
+    public void startFrenzy() {
+        frenzyTime = 1;
     }
 }

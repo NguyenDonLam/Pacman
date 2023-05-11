@@ -1,7 +1,7 @@
 import bagel.util.Point;
 
 public interface Movable {
-    default void makeMove(Entity self, double x, double y, int dydx, double direction) {
+    default void makeMove(Entity self, double x, double y, double dydx, double direction) {
 
         //moving right
         if (direction == 0) {
@@ -21,7 +21,7 @@ public interface Movable {
         }
     }
 
-    default boolean blockedBy(Entity self, Wall wall, double direction, int speed) {
+    default boolean blockedBy(Entity self, Wall wall, double direction, double speed) {
         //moving right
         if (direction == 0) {
             self.setBoundingBox(self.getX() + speed, self.getY());
@@ -38,5 +38,5 @@ public interface Movable {
         return self.getBoundingBox().intersects(wall.getBoundingBox());
     }
 
-    int getSpeed();
+    double getSpeed();
 }
