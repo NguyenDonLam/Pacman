@@ -3,13 +3,13 @@ import java.util.Random;
 public class GhostGreen extends Ghost {
     public GhostGreen(String imagePath, double x, double y) {
         super(imagePath, x, y);
-        this.speed = 4;
         Random random = new Random();
+        this.speed = 4;
         int randInt = random.nextInt(2);
         if (randInt == 0) {
-            this.direction = 1.5 * Math.PI;
+            this.direction = DOWN;
         } else {
-            this.direction = 0;
+            this.direction = LEFT;
         }
     }
     @Override
@@ -21,14 +21,14 @@ public class GhostGreen extends Ghost {
             }
         }
         if (blocked) {
-            if (this.direction == 0) {
-                this.direction = Math.PI;
-            } else if (this.direction == Math.PI){
-                this.direction = 0;
-            } else if (this.direction == 1.5 * Math.PI) {
-                this.direction = 0.5 * Math.PI;
-            } else if (this.direction == 0.5 * Math.PI) {
-                this.direction = 1.5 * Math.PI;
+            if (this.direction == LEFT) {
+                this.direction = RIGHT;
+            } else if (this.direction == RIGHT){
+                this.direction = LEFT;
+            } else if (this.direction == UP) {
+                this.direction = DOWN;
+            } else if (this.direction == DOWN) {
+                this.direction = UP;
             }
         }
         this.makeMove(this, this.x, this.y, this.getSpeed(), this.direction);

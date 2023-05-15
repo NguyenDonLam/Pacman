@@ -7,7 +7,7 @@ public class Ghost extends Entity implements Edible, Movable {
     protected final Image frenzy = new Image("res/ghostFrenzy.png");
     protected boolean eatened = false;
     protected int frendziedTime = 0;
-    protected double direction = 0;
+    protected double direction = RIGHT;
     protected double speed = 1;
 
     public Ghost(String imagePath, double x, double y) {
@@ -41,9 +41,6 @@ public class Ghost extends Entity implements Edible, Movable {
         return this.POINTS;
     }
 
-    public double getDirection() {
-        return direction;
-    }
     public void action(ArrayList<Wall> walls) {
         if (frendziedTime % 1000 != 0)
             frendziedTime++;

@@ -17,6 +17,7 @@ public class Entity {
     public Entity(double x, double y) {
         this.originX = x;
         this.originY = y;
+
     }
 
     /**

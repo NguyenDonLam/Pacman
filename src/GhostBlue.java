@@ -3,7 +3,7 @@ import java.util.ArrayList;
 public class GhostBlue extends Ghost {
     public GhostBlue(String imagePath, double x, double y) {
         super(imagePath, x, y);
-        this.direction = 0.5 * Math.PI;
+        this.direction = DOWN;
         this.speed = 2;
     }
 
@@ -16,10 +16,10 @@ public class GhostBlue extends Ghost {
             }
         }
         if (blocked) {
-            if (this.direction == 0.5 * Math.PI) {
-                this.direction = 1.5 * Math.PI;
+            if (this.direction == DOWN) {
+                this.direction = UP;
             } else {
-                this.direction = 0.5 * Math.PI;
+                this.direction = DOWN;
             }
         }
         this.makeMove(this, this.x, this.y, this.getSpeed(), this.direction);

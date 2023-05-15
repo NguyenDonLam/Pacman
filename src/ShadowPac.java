@@ -3,31 +3,23 @@ import bagel.*;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.BufferedReader;
-import java.util.HashMap;
 import java.util.ArrayList;
+
 /**
  * Skeleton Code for SWEN20003 Project 1, Semester 1, 2023
  *
  * Please enter your name below
  * @author Nguyen Don Lam
  */
-public class ShadowPac extends AbstractGame  {
-    private final static int WINDOW_WIDTH = 1024;
-    private final static int WINDOW_HEIGHT = 768;
-    private final static String GAME_TITLE = "SHADOW PAC";
-    private final Image BACKGROUND_IMAGE = new Image("res/background0.png");
-    private final Font BACKGROUND_TEXT = new Font("res/FSO8BITR.TTF", 64);
-    private final Font INSTRUCTION_TEXT = new Font("res/FSO8BITR.TTF", 24);
-    private final Font SCORE_FONT = new Font("res/FSO8BITR.TTF", 20);
-    private final Image life = new Image("res/heart.png");
-    private final int WIN_MARK0 = 1210, WIN_MARK1 = 800;
+public class ShadowPac extends AbstractGame implements GameConstants {
+
     private Player player;
-    private HashMap<Ghost, Boolean> ghosts = new HashMap<Ghost, Boolean>();
+    private ArrayList<Ghost> ghosts = new ArrayList<Ghost>();
     private ArrayList<Wall> walls = new ArrayList<Wall>();
     private ArrayList<Dot> dots = new ArrayList<Dot>();
     private ArrayList<Cherry> cherries = new ArrayList<Cherry>();
     private Pellet pellet;
-    private int lives = 3, points = 0, gameTick = 0, winTime = 0, frenzyTime = 0;
+    private int lives = 3, points = 0, gameTick = 0, winTime = 0, frenzyTime = MAX_FRENZY;
     private int level = -1;
 
 
@@ -46,49 +38,44 @@ public class ShadowPac extends AbstractGame  {
             while ((info = br.readLine()) != null) {
                 processed = info.split(",");
                 switch (processed[0]) {
-                    case "Player":
-                        player = new Player("res/pac.png", "res/pacOpen.png",
-                                Integer.parseInt(processed[1]), Integer.parseInt(processed[2]));
+                    case PLAYER:
+                        player = new Player(Integer.parseInt(processed[1]), Integer.parseInt(processed[2]));
                         break;
-                    case "Ghost":
-                        ghosts.put(new GhostRed("res/ghostRed.png", Integer.parseInt(processed[1]),
-                                                                             Integer.parseInt(processed[2])), false);
-                        break;
-                    case "Wall":
-                        walls.add(new Wall("res/wall.png",
+                    case WALL:
+                        walls.add(new Wall(PATH_WALL,
                                 Integer.parseInt(processed[1]), Integer.parseInt(processed[2])));
                         break;
-                    case "Dot":
-                        dots.add(new Dot("res/dot.png",
+                    case DOT:
+                        dots.add(new Dot(PATH_DOT,
                                 Integer.parseInt(processed[1]), Integer.parseInt(processed[2])));
                         break;
-                    case "GhostRed":
-                        ghosts.put(new GhostRed("res/ghostRed.png",
-                                Integer.parseInt(processed[1]), Integer.parseInt(processed[2])), false);
+                    case GHOST:
+                    case GHOST_RED:
+                        ghosts.add(new GhostRed(PATH_GHOST_RED,
+                                Integer.parseInt(processed[1]), Integer.parseInt(processed[2])));
                         break;
-                    case "GhostGreen":
-                        ghosts.put(new GhostGreen("res/ghostGreen.png",
-                                Integer.parseInt(processed[1]), Integer.parseInt(processed[2])), false);
+                    case GHOST_GREEN:
+                        ghosts.add(new GhostGreen(PATH_GHOST_GREEN,
+                                Integer.parseInt(processed[1]), Integer.parseInt(processed[2])));
                         break;
-                    case "GhostBlue":
-                        ghosts.put(new GhostBlue("res/ghostBlue.png",
-                                Integer.parseInt(processed[1]), Integer.parseInt(processed[2])), false);
+                    case GHOST_BLUE:
+                        ghosts.add(new GhostBlue(PATH_GHOST_BLUE,
+                                Integer.parseInt(processed[1]), Integer.parseInt(processed[2])));
                         break;
-                    case "GhostPink":
-                        ghosts.put(new GhostPink("res/ghostPink.png",
-                                Integer.parseInt(processed[1]), Integer.parseInt(processed[2])), false);
+                    case GHOST_PINK:
+                        ghosts.add(new GhostPink(PATH_GHOST_PINK,
+                                Integer.parseInt(processed[1]), Integer.parseInt(processed[2])));
                         break;
-                    case "Cherry":
-                        cherries.add(new Cherry("res/cherry.png", Integer.parseInt(processed[1]), Integer.parseInt(processed[2])));
+                    case CHERRY:
+                        cherries.add(new Cherry(PATH_CHERRY, Integer.parseInt(processed[1]), Integer.parseInt(processed[2])));
                         break;
-                    case "Pellet":
-                        pellet = new Pellet("res/pellet.png", Integer.parseInt(processed[1]), Integer.parseInt(processed[2]));
+                    case PELLET:
+                        pellet = new Pellet(PATH_PELLET, Integer.parseInt(processed[1]), Integer.parseInt(processed[2]));
                         break;
 
                 }
             }
-        } catch (FileNotFoundException e) {
-            return false;
+
         } catch(Exception e) {
             e.getStackTrace();
         }
@@ -117,43 +104,42 @@ public class ShadowPac extends AbstractGame  {
 
         // Game start condition
         if (input.wasPressed(Keys.SPACE)) {
-            readCSV(String.format("res/level%d.csv", ++level));
+            readCSV(String.format(PATH_LEVEL, ++level));
             player.spawn();
         }
 
         // display starting screen
         if (level < 0) {
-            BACKGROUND_TEXT.drawString("ShadowPac", 260, 250);
-            INSTRUCTION_TEXT.drawString("PRESS SPACE TO START", 320, 440);
-            INSTRUCTION_TEXT.drawString("USE ARROW KEYS TO MOVE", 305, 480);
+            BACKGROUND_TEXT.drawString(TITLE, 260, 250);
+            INSTRUCTION_TEXT.drawString(INSTRUCT_SPACE, 320, 440);
+            INSTRUCTION_TEXT.drawString(INSTRUCT_KEYS, 305, 480);
 
-            // lv0 win condition
-        } else if (winTime % 20 != 0) {
-            BACKGROUND_TEXT.drawString("TEST TEXT!",
-                    WINDOW_WIDTH/2 - BACKGROUND_TEXT.getWidth("WELL DONE!")/2, WINDOW_HEIGHT/2);
+            // win screen display
+        } else if (winTime < MAX_WIN_DISPLAY) {
+            BACKGROUND_TEXT.drawString(LEVEL_WIN,
+                    WINDOW_WIDTH/2 - BACKGROUND_TEXT.getWidth(LEVEL_WIN)/2,
+                    WINDOW_HEIGHT/2);
             winTime++;
-        } else if ((points == WIN_MARK0 && level == 0) || input.wasPressed(Keys.W)) {
-            BACKGROUND_TEXT.drawString("WELL DONE!",
-                    WINDOW_WIDTH/2 - BACKGROUND_TEXT.getWidth("WELL DONE!")/2, WINDOW_HEIGHT/2);
+            // lv0 win condition
+        } else if ((points >= WIN_MARK_0 && level == 0) || input.wasPressed(Keys.W)) {
             this.reset();
             winTime = 1;
-            readCSV(String.format("res/level%d.csv", ++level));
+            readCSV(String.format(PATH_LEVEL, ++level));
+            // win game condition
+        } else if ((points >= WIN_MARK_1 && level == 1)) {
+            BACKGROUND_TEXT.drawString(GAME_WIN,
+                    WINDOW_WIDTH / 2 - BACKGROUND_TEXT.getWidth(GAME_WIN) / 2,
+                    WINDOW_HEIGHT / 2);
             // Lose condition
         } else if (lives <= 0) {
-            BACKGROUND_TEXT.drawString("GAME OVER!",
-                    WINDOW_WIDTH/2 - BACKGROUND_TEXT.getWidth("GAME OVER!")/2, WINDOW_HEIGHT/2);
+            BACKGROUND_TEXT.drawString(GAME_LOSS,
+                    WINDOW_WIDTH / 2 - BACKGROUND_TEXT.getWidth(GAME_LOSS) / 2,
+                    WINDOW_HEIGHT / 2);
 
             // Currently in a game
         } else {
             playerFacing = -1;
-
-            // display points
-            SCORE_FONT.drawString("SCORE " + points,25, 25);
-
-            // display lives
-            for (int i = 0; i < lives; i++) {
-                life.drawFromTopLeft(900 + (i * 30), 10);
-            }
+            this.displayStat();
 
             // animation
             player.idle(gameTick++);
@@ -163,21 +149,22 @@ public class ShadowPac extends AbstractGame  {
 
             // check if eating anything
             if (level == 1) {
-                this.isEating("Cherry");
-                if (this.isEating("Pellet")) {
+                this.isEating(CHERRY);
+                if (this.isEating(PELLET)) {
                     this.startFrenzy();
                 }
-                if (frenzyTime % 1000 != 0) {
-                    this.isEating("Ghost");
+                if (frenzyTime <= MAX_FRENZY) {
+                    this.isEating(GHOST);
                 }
             }
-            this.isEating("Dot");
+            this.isEating(DOT);
 
-            // touching a ghost?
-            if (frenzyTime % 1000 == 0) {
-                for (Ghost ghost : this.ghosts.keySet()) {
+            // dying to a ghost?
+            if (frenzyTime > MAX_FRENZY) {
+                for (Ghost ghost : this.ghosts) {
                     if (player.overlaps(ghost)) {
                         player.spawn();
+                        ghost.spawn();
                         lives--;
                     }
                 }
@@ -185,20 +172,20 @@ public class ShadowPac extends AbstractGame  {
 
             // Player movements
             if (input.isDown(Keys.UP)) {
-                playerFacing = 1.5 * Math.PI;
+                playerFacing = UP;
             }
             if (input.isDown(Keys.LEFT)) {
-                playerFacing = Math.PI;
+                playerFacing = LEFT;
             }
             if (input.isDown(Keys.RIGHT)) {
-                playerFacing = 0;
+                playerFacing = RIGHT;
             }
             if (input.isDown(Keys.DOWN)) {
-                playerFacing = 0.5 * Math.PI;
+                playerFacing = DOWN;
             }
 
             allAction(level, playerFacing);
-            if (frenzyTime % 1000 != 0) {
+            if (frenzyTime <= MAX_FRENZY) {
                 frenzyTime++;
             }
         }
@@ -213,7 +200,7 @@ public class ShadowPac extends AbstractGame  {
     }
     private boolean isEating(String item) {
         switch (item) {
-            case "Cherry":
+            case CHERRY:
                 for (Cherry cherry : this.cherries) {
                     if (player.overlaps(cherry) && !cherry.isEatened()) {
                         points += cherry.beingEaten();
@@ -221,15 +208,15 @@ public class ShadowPac extends AbstractGame  {
                     }
                 }
                 break;
-            case "Ghost":
-                for (Ghost ghost : this.ghosts.keySet()) {
+            case GHOST:
+                for (Ghost ghost : this.ghosts) {
                     if (player.overlaps(ghost) && !ghost.isEatened()) {
                         points += ghost.beingEaten();
                         return true;
                     }
                 }
                 break;
-            case "Dot":
+            case DOT:
                 for (Dot dot : this.dots) {
                     if (player.overlaps(dot) && !dot.isEatened()) {
                         points += dot.beingEaten();
@@ -237,7 +224,7 @@ public class ShadowPac extends AbstractGame  {
                     }
                 }
                 break;
-            case "Pellet":
+            case PELLET:
                 if (player.overlaps(pellet) && !pellet.isEatened()) {
                     points += pellet.beingEaten();
                     return true;
@@ -249,14 +236,6 @@ public class ShadowPac extends AbstractGame  {
     private void renderAll(int level) {
         for (Wall wall : this.walls) {
             wall.render();
-        }
-        for (Ghost ghost : this.ghosts.keySet()) {
-            if (!ghost.isEatened()) {
-                ghost.render();
-            }
-            if (frenzyTime % 1000 == 0 && ghost.isEatened()) {
-                ghost.spawn();
-            }
         }
         for (Dot dot: dots) {
             if (!dot.isEatened()) {
@@ -273,6 +252,14 @@ public class ShadowPac extends AbstractGame  {
                 pellet.render();
             }
         }
+        for (Ghost ghost : this.ghosts) {
+            if (!ghost.isEatened()) {
+                ghost.render();
+            }
+            if (frenzyTime > MAX_FRENZY && ghost.isEatened()) {
+                ghost.spawn();
+            }
+        }
     }
 
 
@@ -284,7 +271,7 @@ public class ShadowPac extends AbstractGame  {
             }
         }
 
-        for (Ghost ghost : ghosts.keySet()) {
+        for (Ghost ghost : ghosts) {
             if (level > 0) {
                 ghost.action(walls);
             }
@@ -295,10 +282,19 @@ public class ShadowPac extends AbstractGame  {
         }
     }
     private void startFrenzy() {
-        frenzyTime = 1;
-        for (Ghost ghost : ghosts.keySet()) {
+        frenzyTime = 0;
+        for (Ghost ghost : ghosts) {
             ghost.startScared();
         }
         player.startFrenzy();
+    }
+    public void displayStat() {
+        // display points
+        SCORE_FONT.drawString(String.format(SCORE, points),25, 25);
+
+        // display lives
+        for (int i = 0; i < lives; i++) {
+            life.drawFromTopLeft(900 + (i * 30), 10);
+        }
     }
 }

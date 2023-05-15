@@ -5,19 +5,18 @@ import java.lang.Math;
 public class Player extends Entity implements Movable{
     private final int MOVE_AMOUNT = 3;
     private final int CHANGE_MARK = 15;
-    private Image closedMouth;
-    private Image openMouth;
+    private Image CLOSED_MOUTH = new Image("res/pac.png");
+    private Image OPEN_MOUTH = new Image("res/pacOpen.png");
     private DrawOptions direction = new DrawOptions();
     private int frenzyTime = 0;
 
-    public Player(String closedMouth, String openMouth, double x, double y) {
+    public Player(double x, double y) {
         super(x, y);
-        this.closedMouth = new Image(closedMouth);
-        this.openMouth = new Image(openMouth);
-        this.sprite = this.closedMouth;
+        this.sprite = this.CLOSED_MOUTH;
         this.x = this.originX;
         this.y = this.originY;
         this.boundingBox = sprite.getBoundingBox();
+        this.boundingBox.moveTo(new Point(this.originX, this.originY));
     }
 
     /**
@@ -31,7 +30,7 @@ public class Player extends Entity implements Movable{
     }
     @Override
     public void spawn() {
-        direction.setRotation(0);
+        direction.setRotation(RIGHT);
         super.spawn();
     }
 
@@ -41,12 +40,12 @@ public class Player extends Entity implements Movable{
      */
     public void idle(int time) {
         if (time % CHANGE_MARK == 0) {
-            if (sprite == openMouth) {
-                sprite = closedMouth;
-                closedMouth.drawFromTopLeft(this.x, this.y, direction);
-            } else if (sprite == closedMouth) {
-                sprite = openMouth;
-                openMouth.drawFromTopLeft(this.x, this.y, direction);
+            if (sprite == OPEN_MOUTH) {
+                sprite = CLOSED_MOUTH;
+                CLOSED_MOUTH.drawFromTopLeft(this.x, this.y, direction);
+            } else if (sprite == CLOSED_MOUTH) {
+                sprite = OPEN_MOUTH;
+                OPEN_MOUTH.drawFromTopLeft(this.x, this.y, direction);
             }
         } else {
             sprite.drawFromTopLeft(this.x, this.y, direction);
