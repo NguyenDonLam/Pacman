@@ -146,9 +146,7 @@ public class ShadowPac extends AbstractGame implements GameConstants {
             allAction(level, playerFacing);
             if (frenzyTime <= MAX_FRENZY)
                 frenzyTime++;
-
-            if (input.wasPressed(Keys.W))
-                points = 9999999;
+            
             this.checkWinLoss();
         }
     }
@@ -213,12 +211,6 @@ public class ShadowPac extends AbstractGame implements GameConstants {
      * @param level: the current level the player is in
      */
     private void renderAll(int level) {
-        for (Wall wall : this.walls)
-            wall.render();
-        for (Dot dot: dots) {
-            if (!dot.beenEaten())
-                dot.render();
-        }
         if (level == 1) {
             for (Cherry cherry: cherries) {
                 if (!cherry.beenEaten())
@@ -226,6 +218,12 @@ public class ShadowPac extends AbstractGame implements GameConstants {
             }
             if (!pellet.beenEaten())
                 pellet.render();
+        }
+        for (Wall wall : this.walls)
+            wall.render();
+        for (Dot dot: dots) {
+            if (!dot.beenEaten())
+                dot.render();
         }
         for (Ghost ghost : this.ghosts) {
             if (!ghost.beenEaten())
