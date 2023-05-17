@@ -23,6 +23,7 @@ public interface GameConstants {
     String TITLE = "ShadowPac";
     String INSTRUCT_SPACE = "PRESS SPACE TO START";
     String INSTRUCT_KEYS = "USE ARROW KEYS TO MOVE";
+    String INSTRUCT_PELLET = "EAT THE PELLET TO ATTACK";
     String LEVEL_WIN = "LEVEL COMPLETE!";
     String GAME_WIN = "WELL DONE!";
     String GAME_LOSS = "GAME OVER!";
@@ -36,19 +37,28 @@ public interface GameConstants {
     int MAX_WIN_DISPLAY = 300;
     int WIN_MARK_0 = 1210;
     int WIN_MARK_1 = 800;
-
-
-
-
-
-
-
     int WINDOW_WIDTH = 1024;
     int WINDOW_HEIGHT = 768;
     String GAME_TITLE = "SHADOW PAC";
     Image BACKGROUND_IMAGE = new Image("res/background0.png");
     Font BACKGROUND_TEXT = new Font("res/FSO8BITR.TTF", 64);
     Font INSTRUCTION_TEXT = new Font("res/FSO8BITR.TTF", 24);
+    Font NEXT_INSTRUCT_TEXT = new Font("res/FSO8BITR.TTF", 40);
     Font SCORE_FONT = new Font("res/FSO8BITR.TTF", 20);
     Image life = new Image("res/heart.png");
+    int TITLE_X = 260;
+    int TITLE_Y = 250;
+    int FRST_INSTRUCT_X = 320;
+    int FRST_INSTRUCT_Y = 440;
+    int SCND_INSTRUCT_X = 200;
+    int SCND_INSTRUCT_Y = 350;
+    int PADDING = 50;
+
+    int LIFE_X = 900;
+    int LIFE_Y = 10;
+    int LIFE_PADDING = 30;
+    int SCORE_X = 25;
+    int SCORE_Y = 25;
+    int MAX_LIVES = 3;
+    int STANDING_STILL = -1;
 }

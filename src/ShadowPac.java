@@ -1,13 +1,11 @@
 import bagel.*;
 
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.BufferedReader;
 import java.util.ArrayList;
 
 /**
  * Skeleton Code for SWEN20003 Project 1, Semester 1, 2023
- *
  * Please enter your name below
  * @author Nguyen Don Lam
  */
@@ -19,8 +17,13 @@ public class ShadowPac extends AbstractGame implements GameConstants {
     private ArrayList<Dot> dots = new ArrayList<Dot>();
     private ArrayList<Cherry> cherries = new ArrayList<Cherry>();
     private Pellet pellet;
-    private int lives = 3, points = 0, gameTick = 0, winTime = 0, frenzyTime = MAX_FRENZY;
-    private int level = -1;
+    private int lives = MAX_LIVES;
+    private int points = 0;
+    private int gameTick = 0;
+    private int winTime = MAX_WIN_DISPLAY;
+    private int frenzyTime = MAX_FRENZY;
+    private int level = 0;
+    private boolean start = false;
 
 
     public ShadowPac(){
@@ -28,49 +31,46 @@ public class ShadowPac extends AbstractGame implements GameConstants {
     }
 
     /**
-     * Method used to read file and create objects (you can change
-     * this method as you wish).
+     * Reads the provided file for a level and store all relevant data
+     * @param fp: the file path provided as a string
      */
-    private boolean readCSV(String fp) {
+    private void readCSV(String fp) {
         String info;
         String[] processed;
+        int x, y;
         try(BufferedReader br = new BufferedReader(new FileReader(fp))){
             while ((info = br.readLine()) != null) {
                 processed = info.split(",");
+                x = Integer.parseInt(processed[1]);
+                y = Integer.parseInt(processed[2]);
                 switch (processed[0]) {
                     case PLAYER:
-                        player = new Player(Integer.parseInt(processed[1]), Integer.parseInt(processed[2]));
+                        player = new Player(x, y);
                         break;
                     case WALL:
-                        walls.add(new Wall(PATH_WALL,
-                                Integer.parseInt(processed[1]), Integer.parseInt(processed[2])));
+                        walls.add(new Wall(PATH_WALL, x, y));
                         break;
                     case DOT:
-                        dots.add(new Dot(PATH_DOT,
-                                Integer.parseInt(processed[1]), Integer.parseInt(processed[2])));
+                        dots.add(new Dot(PATH_DOT, x, y));
                         break;
                     case GHOST:
                     case GHOST_RED:
-                        ghosts.add(new GhostRed(PATH_GHOST_RED,
-                                Integer.parseInt(processed[1]), Integer.parseInt(processed[2])));
+                        ghosts.add(new GhostRed(PATH_GHOST_RED, x, y));
                         break;
                     case GHOST_GREEN:
-                        ghosts.add(new GhostGreen(PATH_GHOST_GREEN,
-                                Integer.parseInt(processed[1]), Integer.parseInt(processed[2])));
+                        ghosts.add(new GhostGreen(PATH_GHOST_GREEN, x, y));
                         break;
                     case GHOST_BLUE:
-                        ghosts.add(new GhostBlue(PATH_GHOST_BLUE,
-                                Integer.parseInt(processed[1]), Integer.parseInt(processed[2])));
+                        ghosts.add(new GhostBlue(PATH_GHOST_BLUE, x, y));
                         break;
                     case GHOST_PINK:
-                        ghosts.add(new GhostPink(PATH_GHOST_PINK,
-                                Integer.parseInt(processed[1]), Integer.parseInt(processed[2])));
+                        ghosts.add(new GhostPink(PATH_GHOST_PINK, x, y));
                         break;
                     case CHERRY:
-                        cherries.add(new Cherry(PATH_CHERRY, Integer.parseInt(processed[1]), Integer.parseInt(processed[2])));
+                        cherries.add(new Cherry(PATH_CHERRY, x, y));
                         break;
                     case PELLET:
-                        pellet = new Pellet(PATH_PELLET, Integer.parseInt(processed[1]), Integer.parseInt(processed[2]));
+                        pellet = new Pellet(PATH_PELLET, x, y);
                         break;
 
                 }
@@ -79,7 +79,6 @@ public class ShadowPac extends AbstractGame implements GameConstants {
         } catch(Exception e) {
             e.getStackTrace();
         }
-        return true;
     }
 
     /**
@@ -91,75 +90,40 @@ public class ShadowPac extends AbstractGame implements GameConstants {
     }
 
     /**
-     * Performs a state update.
-     * Allows the game to exit when the escape key is pressed.
+     * The method providing an update to the game state every tick
+     * @param input: the item used to check for keyboard inputs
      */
     @Override
     protected void update(Input input) {
         double playerFacing;
         BACKGROUND_IMAGE.draw(Window.getWidth() / 2.0, Window.getHeight() / 2.0);
-        if (input.wasPressed(Keys.ESCAPE)){
+        if (input.wasPressed(Keys.ESCAPE))
             Window.close();
-        }
-
-        // Game start condition
-        if (input.wasPressed(Keys.SPACE)) {
-            readCSV(String.format(PATH_LEVEL, ++level));
-            player.spawn();
-        }
-
-        // display starting screen
-        if (level < 0) {
-            BACKGROUND_TEXT.drawString(TITLE, 260, 250);
-            INSTRUCTION_TEXT.drawString(INSTRUCT_SPACE, 320, 440);
-            INSTRUCTION_TEXT.drawString(INSTRUCT_KEYS, 305, 480);
-
-            // win screen display
-        } else if (winTime < MAX_WIN_DISPLAY) {
-            BACKGROUND_TEXT.drawString(LEVEL_WIN,
-                    WINDOW_WIDTH/2 - BACKGROUND_TEXT.getWidth(LEVEL_WIN)/2,
-                    WINDOW_HEIGHT/2);
-            winTime++;
-            // lv0 win condition
-        } else if ((points >= WIN_MARK_0 && level == 0) || input.wasPressed(Keys.W)) {
-            this.reset();
-            winTime = 1;
-            readCSV(String.format(PATH_LEVEL, ++level));
-            // win game condition
-        } else if ((points >= WIN_MARK_1 && level == 1)) {
-            BACKGROUND_TEXT.drawString(GAME_WIN,
-                    WINDOW_WIDTH / 2 - BACKGROUND_TEXT.getWidth(GAME_WIN) / 2,
-                    WINDOW_HEIGHT / 2);
-            // Lose condition
-        } else if (lives <= 0) {
-            BACKGROUND_TEXT.drawString(GAME_LOSS,
-                    WINDOW_WIDTH / 2 - BACKGROUND_TEXT.getWidth(GAME_LOSS) / 2,
-                    WINDOW_HEIGHT / 2);
-
+        // If currently in the screen break in between levels
+        if (!start) {
+            if (displayWinStart(input))
+                readCSV(String.format(PATH_LEVEL, level));
             // Currently in a game
         } else {
-            playerFacing = -1;
+            playerFacing = STANDING_STILL;
+            // GAME RENDERING =================================================
+            player.idle(gameTick++);
+            this.renderAll(level);
             this.displayStat();
 
-            // animation
-            player.idle(gameTick++);
-
-            // renders relevant Entities
-            this.renderAll(level);
-
-            // check if eating anything
+            // EATING CHECK ===================================================
             if (level == 1) {
                 this.isEating(CHERRY);
-                if (this.isEating(PELLET)) {
+
+                if (this.isEating(PELLET))
                     this.startFrenzy();
-                }
-                if (frenzyTime <= MAX_FRENZY) {
+
+                if (frenzyTime <= MAX_FRENZY)
                     this.isEating(GHOST);
-                }
             }
             this.isEating(DOT);
 
-            // dying to a ghost?
+            //  LOOSING LIVES CHECK ===========================================
             if (frenzyTime > MAX_FRENZY) {
                 for (Ghost ghost : this.ghosts) {
                     if (player.overlaps(ghost)) {
@@ -170,39 +134,49 @@ public class ShadowPac extends AbstractGame implements GameConstants {
                 }
             }
 
-            // Player movements
-            if (input.isDown(Keys.UP)) {
+            // ENTITIES' ACTIONS ==============================================
+            if (input.isDown(Keys.UP))
                 playerFacing = UP;
-            }
-            if (input.isDown(Keys.LEFT)) {
+            if (input.isDown(Keys.LEFT))
                 playerFacing = LEFT;
-            }
-            if (input.isDown(Keys.RIGHT)) {
+            if (input.isDown(Keys.RIGHT))
                 playerFacing = RIGHT;
-            }
-            if (input.isDown(Keys.DOWN)) {
+            if (input.isDown(Keys.DOWN))
                 playerFacing = DOWN;
-            }
-
             allAction(level, playerFacing);
-            if (frenzyTime <= MAX_FRENZY) {
+            if (frenzyTime <= MAX_FRENZY)
                 frenzyTime++;
-            }
+
+            if (input.wasPressed(Keys.W))
+                points = 9999999;
+            this.checkWinLoss();
         }
     }
 
+    /**
+     * reset every relevant data the game is currently storing in preparation for next level;
+     */
     private void reset() {
         ghosts.clear();
         walls.clear();
         dots.clear();
-        lives = 3;
+        lives = MAX_LIVES;
         points = 0;
+        level++;
+        winTime = 1;
+        start = false;
     }
+
+    /**
+     * Checks whether the player is currently eating any of the food type provided or not
+     * @param item: the name of the food type as a string
+     * @return whether the player is eating anything or not
+     */
     private boolean isEating(String item) {
         switch (item) {
             case CHERRY:
                 for (Cherry cherry : this.cherries) {
-                    if (player.overlaps(cherry) && !cherry.isEatened()) {
+                    if (player.overlaps(cherry) && !cherry.beenEaten()) {
                         points += cherry.beingEaten();
                         return true;
                     }
@@ -210,7 +184,7 @@ public class ShadowPac extends AbstractGame implements GameConstants {
                 break;
             case GHOST:
                 for (Ghost ghost : this.ghosts) {
-                    if (player.overlaps(ghost) && !ghost.isEatened()) {
+                    if (player.overlaps(ghost) && !ghost.beenEaten()) {
                         points += ghost.beingEaten();
                         return true;
                     }
@@ -218,14 +192,14 @@ public class ShadowPac extends AbstractGame implements GameConstants {
                 break;
             case DOT:
                 for (Dot dot : this.dots) {
-                    if (player.overlaps(dot) && !dot.isEatened()) {
+                    if (player.overlaps(dot) && !dot.beenEaten()) {
                         points += dot.beingEaten();
                         return true;
                     }
                 }
                 break;
             case PELLET:
-                if (player.overlaps(pellet) && !pellet.isEatened()) {
+                if (player.overlaps(pellet) && !pellet.beenEaten()) {
                     points += pellet.beingEaten();
                     return true;
                 }
@@ -233,68 +207,124 @@ public class ShadowPac extends AbstractGame implements GameConstants {
         }
         return false;
     }
+
+    /**
+     * Renders all relevant entities still in the game
+     * @param level: the current level the player is in
+     */
     private void renderAll(int level) {
-        for (Wall wall : this.walls) {
+        for (Wall wall : this.walls)
             wall.render();
-        }
         for (Dot dot: dots) {
-            if (!dot.isEatened()) {
+            if (!dot.beenEaten())
                 dot.render();
-            }
         }
         if (level == 1) {
             for (Cherry cherry: cherries) {
-                if (!cherry.isEatened()) {
+                if (!cherry.beenEaten())
                     cherry.render();
-                }
             }
-            if (!pellet.isEatened()) {
+            if (!pellet.beenEaten())
                 pellet.render();
-            }
         }
         for (Ghost ghost : this.ghosts) {
-            if (!ghost.isEatened()) {
+            if (!ghost.beenEaten())
                 ghost.render();
-            }
-            if (frenzyTime > MAX_FRENZY && ghost.isEatened()) {
+            if (frenzyTime > MAX_FRENZY && ghost.beenEaten())
                 ghost.spawn();
-            }
         }
     }
-
-
-    public void allAction(int level, double playerFacing) {
+    /**
+     * Move all movable entities in the current game in their relevant directions
+     * @param level: the current level the player is in
+     * @param playerFacing: the direction in which the player is moving
+     */
+    private void allAction(int level, double playerFacing) {
         boolean blocked = false;
         for (Wall wall : walls) {
-            if (player.blockedBy(player, wall, playerFacing, player.getSpeed())) {
+            if (player.blockedBy(player, wall, playerFacing, player.getSpeed()))
                 blocked = true;
-            }
         }
 
         for (Ghost ghost : ghosts) {
-            if (level > 0) {
+            if (level > 0)
                 ghost.action(walls);
-            }
         }
 
-        if (!blocked && playerFacing != -1) {
+        if (!blocked && playerFacing != STANDING_STILL)
             player.makeMove(playerFacing);
-        }
     }
+    /**
+     * Start frenzy mode for all ghosts, player and the game itself
+     */
     private void startFrenzy() {
         frenzyTime = 0;
-        for (Ghost ghost : ghosts) {
+        for (Ghost ghost : ghosts)
             ghost.startScared();
-        }
         player.startFrenzy();
     }
-    public void displayStat() {
+    /**
+     * Display the lives and points in the current game
+     */
+    private void displayStat() {
         // display points
-        SCORE_FONT.drawString(String.format(SCORE, points),25, 25);
+        SCORE_FONT.drawString(String.format(SCORE, points),SCORE_X, SCORE_Y);
 
         // display lives
-        for (int i = 0; i < lives; i++) {
-            life.drawFromTopLeft(900 + (i * 30), 10);
+        for (int i = 0; i < lives; i++)
+            life.drawFromTopLeft(LIFE_X + (i * LIFE_PADDING), LIFE_Y);
+    }
+
+    /**
+     * Checks whether the game has been won lost,
+     * reset all status for next level if won
+     */
+    private void checkWinLoss() {
+        if (lives <= 0)
+            start = false;
+        if (level == 0) {
+            if (points >= WIN_MARK_0)
+                this.reset();
+        } else {
+            if (points >= WIN_MARK_1)
+                this.reset();
         }
+    }
+
+    /**
+     * Displays the relevant screen pre/post a level, detects if level is started
+     * @param input: the item to identify any keyboard input pressed
+     * @return whether the next level has been initiated by the player
+     */
+    private boolean displayWinStart(Input input) {
+        if (input.wasPressed(Keys.SPACE)) {
+            start = true;
+            return true;
+        }
+        if (lives <= 0) {
+            BACKGROUND_TEXT.drawString(GAME_LOSS,
+                    WINDOW_WIDTH / 2.0 - BACKGROUND_TEXT.getWidth(GAME_LOSS) / 2.0,
+                    WINDOW_HEIGHT / 2.0);
+        } else if (winTime < MAX_WIN_DISPLAY && level == 1) {
+            BACKGROUND_TEXT.drawString(LEVEL_WIN,
+                    WINDOW_WIDTH / 2.0 - BACKGROUND_TEXT.getWidth(LEVEL_WIN) / 2.0,
+                    WINDOW_HEIGHT / 2.0);
+            winTime++;
+        } else if (level == 0) {
+            BACKGROUND_TEXT.drawString(TITLE, TITLE_X, TITLE_Y);
+            INSTRUCTION_TEXT.drawString(INSTRUCT_SPACE, FRST_INSTRUCT_X, FRST_INSTRUCT_Y);
+            INSTRUCTION_TEXT.drawString(INSTRUCT_KEYS, FRST_INSTRUCT_X,
+                                                    FRST_INSTRUCT_Y + PADDING);
+        } else if (level == 1) {
+            NEXT_INSTRUCT_TEXT.drawString(INSTRUCT_SPACE, SCND_INSTRUCT_X, SCND_INSTRUCT_Y);
+            NEXT_INSTRUCT_TEXT.drawString(INSTRUCT_KEYS, SCND_INSTRUCT_X,
+                                                      SCND_INSTRUCT_Y + PADDING);
+            NEXT_INSTRUCT_TEXT.drawString(INSTRUCT_PELLET, SCND_INSTRUCT_X,
+                                                        SCND_INSTRUCT_Y + 2 * PADDING);
+        } else
+            BACKGROUND_TEXT.drawString(GAME_WIN,
+                    WINDOW_WIDTH / 2.0 - BACKGROUND_TEXT.getWidth(GAME_WIN) / 2.0,
+                    WINDOW_HEIGHT / 2.0);
+        return false;
     }
 }
