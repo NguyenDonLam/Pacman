@@ -20,7 +20,7 @@ public interface GameConstants {
     String PATH_GHOST_BLUE = "res/ghostBlue.png";
     String PATH_GHOST_GREEN = "res/ghostGreen.png";
     String PATH_GHOST_PINK = "res/ghostPink.png";
-    String TITLE = "ShadowPac";
+    String TITLE = "Shadow Pac";
     String INSTRUCT_SPACE = "PRESS SPACE TO START";
     String INSTRUCT_KEYS = "USE ARROW KEYS TO MOVE";
     String INSTRUCT_PELLET = "EAT THE PELLET TO ATTACK";

@@ -161,7 +161,7 @@ public class ShadowPac extends AbstractGame implements GameConstants {
         lives = MAX_LIVES;
         points = 0;
         level++;
-        winTime = 1;
+        winTime = 0;
         start = false;
     }
 
@@ -211,7 +211,7 @@ public class ShadowPac extends AbstractGame implements GameConstants {
      * @param level: the current level the player is in
      */
     private void renderAll(int level) {
-        if (level == 1) {
+        if (level > 0) {
             for (Cherry cherry: cherries) {
                 if (!cherry.beenEaten())
                     cherry.render();
@@ -239,18 +239,23 @@ public class ShadowPac extends AbstractGame implements GameConstants {
      */
     private void allAction(int level, double playerFacing) {
         boolean blocked = false;
-        for (Wall wall : walls) {
-            if (player.blockedBy(player, wall, playerFacing, player.getSpeed()))
-                blocked = true;
-        }
-
+        // MOVE GHOSTS ========================================================
         for (Ghost ghost : ghosts) {
             if (level > 0)
                 ghost.action(walls);
         }
+        // MOVE PLAYER ========================================================
+        if (playerFacing != STANDING_STILL) {
+            // Making sure the player aren't blocked by a wall
+            for (Wall wall : walls) {
+                if (player.blockedBy(player, wall, playerFacing, player.getSpeed()))
+                    blocked = true;
+            }
+            if (!blocked)
+                player.makeMove(playerFacing);
+        }
 
-        if (!blocked && playerFacing != STANDING_STILL)
-            player.makeMove(playerFacing);
+
     }
     /**
      * Start frenzy mode for all ghosts, player and the game itself
@@ -278,8 +283,10 @@ public class ShadowPac extends AbstractGame implements GameConstants {
      * reset all status for next level if won
      */
     private void checkWinLoss() {
+        // Loss condition
         if (lives <= 0)
             start = false;
+        // Win conditions
         if (level == 0) {
             if (points >= WIN_MARK_0)
                 this.reset();
@@ -295,30 +302,40 @@ public class ShadowPac extends AbstractGame implements GameConstants {
      * @return whether the next level has been initiated by the player
      */
     private boolean displayWinStart(Input input) {
+        // GAME INITIATION CHECK ==============================================
         if (input.wasPressed(Keys.SPACE)) {
             start = true;
             return true;
         }
+        // GAME LOSS SCREEN ===================================================
         if (lives <= 0) {
             BACKGROUND_TEXT.drawString(GAME_LOSS,
                     WINDOW_WIDTH / 2.0 - BACKGROUND_TEXT.getWidth(GAME_LOSS) / 2.0,
                     WINDOW_HEIGHT / 2.0);
+
+            // LEVEL WIN SCREEN ===============================================
         } else if (winTime < MAX_WIN_DISPLAY && level == 1) {
             BACKGROUND_TEXT.drawString(LEVEL_WIN,
                     WINDOW_WIDTH / 2.0 - BACKGROUND_TEXT.getWidth(LEVEL_WIN) / 2.0,
                     WINDOW_HEIGHT / 2.0);
             winTime++;
+
+            // START SCREEN ===================================================
         } else if (level == 0) {
             BACKGROUND_TEXT.drawString(TITLE, TITLE_X, TITLE_Y);
             INSTRUCTION_TEXT.drawString(INSTRUCT_SPACE, FRST_INSTRUCT_X, FRST_INSTRUCT_Y);
             INSTRUCTION_TEXT.drawString(INSTRUCT_KEYS, FRST_INSTRUCT_X,
                                                     FRST_INSTRUCT_Y + PADDING);
+
+            // NEXT LEVEL INSTRUCTION =========================================
         } else if (level == 1) {
             NEXT_INSTRUCT_TEXT.drawString(INSTRUCT_SPACE, SCND_INSTRUCT_X, SCND_INSTRUCT_Y);
             NEXT_INSTRUCT_TEXT.drawString(INSTRUCT_KEYS, SCND_INSTRUCT_X,
                                                       SCND_INSTRUCT_Y + PADDING);
             NEXT_INSTRUCT_TEXT.drawString(INSTRUCT_PELLET, SCND_INSTRUCT_X,
                                                         SCND_INSTRUCT_Y + 2 * PADDING);
+
+            // GAME WIN SCREEN =================================================
         } else
             BACKGROUND_TEXT.drawString(GAME_WIN,
                     WINDOW_WIDTH / 2.0 - BACKGROUND_TEXT.getWidth(GAME_WIN) / 2.0,
